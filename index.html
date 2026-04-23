@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shopypet 🐾 | Evcil Hayvan Alışveriş</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Righteous&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--orange:#FF6B35;--yellow:#FFD93D;--green:#6BCB77;--blue:#4D96FF;--pink:#FF6B9D;--purple:#C77DFF;--bg:#FFFBF5;--card:#FFFFFF;--text:#1E1E2E;--muted:#888;--border:rgba(0,0,0,0.07);--radius:20px}
+html{scroll-behavior:smooth}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;width:100%;display:flex;flex-direction:column;min-height:100vh}
+body.modal-open { overflow: hidden; height: 100vh; }
+nav{position:sticky;top:0;z-index:200;background:rgba(255,251,245,0.95);backdrop-filter:blur(16px);border-bottom:2px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;height:70px}
+.logo{font-family:'Righteous',sans-serif;font-size:1.7rem;color:var(--orange);text-decoration:none;display:flex;align-items:center;gap:6px;cursor:pointer;}
+.logo span{color:var(--text)}
+.nav-links{display:flex;gap:1.5rem;list-style:none}
+.nav-links a{font-size:0.9rem;font-weight:700;color:var(--muted);text-decoration:none;padding:6px 14px;border-radius:100px;transition:all 0.2s;cursor:pointer;}
+.nav-links a:hover,.nav-links a.active{background:var(--yellow);color:var(--text)}
+.nav-right{display:flex;align-items:center;gap:1rem}
+.search-bar{display:flex;align-items:center;background:#fff;border:2px solid var(--border);border-radius:100px;padding:6px 16px;gap:8px}
+.search-bar input{border:none;outline:none;font-family:'Nunito',sans-serif;font-size:0.88rem;width:160px;background:transparent}
+.cart-pill{display:flex;align-items:center;gap:8px;background:var(--orange);color:#fff;border:none;border-radius:100px;padding:9px 20px;font-size:0.88rem;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;transition:transform 0.2s;}
+.cart-pill:hover{transform:scale(1.04)}
+.cart-count{background:#fff;color:var(--orange);width:20px;height:20px;border-radius:50%;font-size:0.72rem;font-weight:900;display:flex;align-items:center;justify-content:center}
+.hamburger{display:none;background:none;border:none;font-size:1.8rem;color:var(--text);cursor:pointer;}
+.mobile-menu{display:none;position:fixed;top:60px;left:0;width:100%;background:#fff;border-bottom:2px solid var(--border);z-index:199;flex-direction:column;padding:1rem;}
+.mobile-menu.open{display:flex;}
+.mobile-menu a{padding:12px 20px;font-weight:800;text-decoration:none;color:var(--text);border-bottom:1px solid #f0f0f0;}
+.cart-sidebar{position:fixed;top:0;right:-100%;width:100%;max-width:400px;height:100vh;background:#fff;z-index:9999;box-shadow:-5px 0 30px rgba(0,0,0,0.15);transition:right 0.3s ease;display:flex;flex-direction:column;}
+.cart-sidebar.open{right:0;}
+.cart-header{padding:1.5rem;border-bottom:2px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.cart-header h2{font-family:'Righteous',sans-serif;font-size:1.5rem;color:var(--orange);margin:0;}
+.cart-close{background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--muted);transition:0.2s;}
+.cart-close:hover{color:var(--orange);transform:rotate(90deg);}
+.cart-body{flex:1;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:1rem;}
+.cart-item{display:flex;gap:1rem;align-items:center;padding-bottom:1rem;border-bottom:1px solid var(--border);}
+.cart-item-img{font-size:2rem;background:var(--bg);width:60px;height:60px;display:flex;align-items:center;justify-content:center;border-radius:12px;}
+.cart-item-info{flex:1;}
+.cart-item-title{font-weight:800;font-size:0.9rem;color:var(--text);}
+.cart-item-price{color:var(--orange);font-weight:900;font-size:0.95rem;}
+.cart-item-ctrl{display:flex;align-items:center;gap:12px;background:#f5f5f5;padding:4px 12px;border-radius:100px;width:fit-content;margin-top:6px;}
+.cart-item-btn{border:none;background:none;cursor:pointer;font-weight:900;font-size:1.1rem;color:var(--text);}
+.cart-item-remove{color:var(--pink);border:none;background:none;cursor:pointer;font-size:0.75rem;font-weight:800;margin-left:auto;}
+.cart-footer{padding:1.5rem;border-top:2px solid var(--border);background:#fafafa;}
+.cart-summary{display:flex;justify-content:space-between;margin-bottom:1rem;font-weight:900;font-size:1.4rem;}
+.checkout-btn{width:100%;background:var(--orange);color:#fff;border:none;padding:14px;border-radius:16px;font-weight:900;font-family:'Nunito',sans-serif;cursor:pointer;font-size:1rem;}
+.page-section{display:none;animation:fadeIn 0.4s ease;flex:1;}
+.page-section.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.hero{min-height:85vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:3rem;padding:4rem;max-width:1400px;margin:0 auto;position:relative}
+.hero-blob{position:absolute;top:-100px;right:-100px;width:600px;height:600px;background:radial-gradient(circle,rgba(255,217,61,0.25) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+.hero-eyebrow{display:inline-flex;background:var(--yellow);color:var(--text);font-size:0.8rem;font-weight:800;padding:6px 16px;border-radius:100px;margin-bottom:1.4rem}
+.hero h1{font-family:'Righteous',sans-serif;font-size:clamp(2.8rem,5vw,4.4rem);line-height:1.1;margin-bottom:1.2rem}
+.hero h1 .highlight{color:var(--orange);}
+.hero-desc{font-size:1.05rem;color:var(--muted);line-height:1.7;margin-bottom:2rem;max-width:480px}
+.btn-primary{background:var(--orange);color:#fff;border:none;border-radius:100px;padding:14px 32px;font-size:1rem;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;}
+.btn-outline{background:transparent;color:var(--text);border:2.5px solid var(--text);border-radius:100px;padding:14px 32px;font-size:1rem;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;}
+.hero-badges{display:flex;gap:1rem;margin-top:2rem;flex-wrap:wrap;}
+.badge-pill{display:flex;align-items:center;gap:6px;background:#fff;border:2px solid var(--border);border-radius:100px;padding:6px 14px;font-size:0.8rem;font-weight:700;}
+.hero-visual{display:flex;align-items:center;justify-content:center;position:relative;width:100%;}
+.hero-card-stack{position:relative;width:100%;max-width:360px;height:420px}
+.float-card{position:absolute;background:#fff;border-radius:24px;border:2px solid var(--border);padding:1.2rem;box-shadow:0 12px 36px rgba(0,0,0,0.08);animation:float 4s ease-in-out infinite;}
+.float-card:nth-child(2){animation-delay:0.8s}
+.float-card:nth-child(3){animation-delay:1.6s}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.fc-main{width:220px;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;}
+.fc-top{width:160px;top:0;right:0;z-index:2;background:var(--yellow);}
+.fc-bottom{width:160px;bottom:0;left:0;z-index:2;background:var(--green);}
+.product-thumb{width:100%;aspect-ratio:1;border-radius:16px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:3rem;}
+.fc-name{font-weight:800;font-size:0.9rem;margin-top:0.6rem}
+.fc-price{color:var(--orange);font-weight:900;font-size:1rem}
+.static-page{max-width:1000px;margin:4rem auto;padding:3rem;background:#fff;border-radius:30px;box-shadow:0 10px 30px rgba(0,0,0,0.05);text-align:center;}
+.static-page h2{font-family:'Righteous',sans-serif;font-size:2.5rem;color:var(--orange);margin-bottom:1rem;}
+.static-page p{font-size:1.1rem;color:var(--muted);line-height:1.8;margin-bottom:1.5rem;}
+.cat-band{background:var(--text);padding:1.2rem 0;overflow:hidden;white-space:nowrap;}
+.cat-scroll{display:inline-flex;gap:2rem;animation:scroll 20s linear infinite;}
+.cat-item{display:inline-flex;align-items:center;gap:8px;color:#fff;font-weight:800;font-size:0.9rem;}
+.cat-dot{width:6px;height:6px;border-radius:50%;background:var(--yellow)}
+.section{max-width:1400px;margin:0 auto;padding:4rem 2.5rem;}
+.section-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2.5rem;}
+.section-title{font-family:'Righteous',sans-serif;font-size:clamp(1.8rem,3vw,2.6rem);line-height:1.1;}
+.section-title .dot{color:var(--orange)}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1.2rem;}
+.cat-card{background:#fff;border-radius:var(--radius);border:2px solid var(--border);padding:2rem 1rem;display:flex;flex-direction:column;align-items:center;gap:0.8rem;cursor:pointer;text-decoration:none;color:var(--text);transition:0.3s;}
+.cat-card:hover{transform:translateY(-5px);border-color:var(--orange);}
+.cat-icon-wrap{width:70px;height:70px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:2rem;}
+.cat-label{font-weight:800;font-size:0.9rem;}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem;}
+.product-card{background:var(--card);border-radius:var(--radius);border:2px solid var(--border);overflow:hidden;cursor:pointer;transition:all 0.3s;position:relative;}
+.product-card:hover{transform:translateY(-6px);border-color:var(--orange);box-shadow:0 15px 30px rgba(0,0,0,0.1);}
+.product-img{width:100%;aspect-ratio:1;background:#f7f5f2;display:flex;align-items:center;justify-content:center;font-size:5rem;position:relative;overflow:hidden;}
+.product-badge{position:absolute;top:10px;left:10px;font-size:0.7rem;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;padding:4px 10px;border-radius:100px;}
+.badge-new{background:var(--green);color:#fff}
+.badge-hot{background:var(--orange);color:#fff}
+.badge-sale{background:var(--pink);color:#fff}
+.product-body{padding:1.2rem}
+.product-animal{font-size:0.72rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:4px;}
+.product-name{font-weight:800;font-size:1rem;margin-bottom:0.5rem;}
+.product-desc{font-size:0.82rem;color:var(--muted);margin-bottom:1rem;height:2.4rem;overflow:hidden;}
+.product-footer{display:flex;align-items:center;justify-content:space-between;}
+.product-price{font-weight:900;font-size:1.1rem}
+.product-price-old{font-size:0.8rem;color:var(--muted);text-decoration:line-through;margin-right:4px;font-weight:600;}
+.add-to-cart{background:var(--text);color:#fff;border:none;border-radius:12px;padding:9px 18px;font-size:0.82rem;font-weight:800;cursor:pointer;transition:0.2s;}
+.add-to-cart:hover{background:var(--orange)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(30,30,46,0.7);z-index:10000;align-items:flex-start;justify-content:center;padding:2rem 1rem;backdrop-filter:blur(5px);overflow-y:auto;}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:28px;max-width:900px;width:100%;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;position:relative;margin:auto;}
+.modal-left{background:#fff8f5;display:flex;align-items:center;justify-content:center;padding:3rem;font-size:8rem;}
+.modal-animal-tag{position:absolute;top:16px;left:16px;font-size:0.72rem;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;background:var(--yellow);color:var(--text);padding:5px 14px;border-radius:100px;}
+.modal-right{padding:2.5rem;display:flex;flex-direction:column;}
+.modal-close{position:absolute;top:16px;right:16px;z-index:10;width:38px;height:38px;background:#fff;border:2px solid var(--border);border-radius:50%;font-size:1.1rem;cursor:pointer;font-weight:800;}
+.modal-category{font-size:0.72rem;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:var(--orange);margin-bottom:8px;}
+.modal-title{font-family:'Righteous',sans-serif;font-size:1.8rem;margin-bottom:0.8rem;line-height:1.2;}
+.modal-price-wrap{display:flex;align-items:baseline;gap:10px;margin-bottom:1.5rem;}
+.modal-price{font-family:'Righteous',sans-serif;font-size:2rem;color:var(--orange)}
+.modal-desc{font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;flex:1;}
+.modal-buy-btn{width:100%;padding:15px;background:var(--orange);color:#fff;border:none;border-radius:16px;font-size:1rem;font-weight:900;font-family:'Nunito',sans-serif;cursor:pointer;transition:0.2s;}
+.payment-wrap{display:none;margin-top:1rem;border:2px solid var(--border);border-radius:16px;overflow:hidden;padding:10px;}
+.payment-wrap.open{display:block}
+footer{background:var(--text);color:#fff;padding:4rem 2.5rem 2rem;margin-top:auto;}
+.footer-grid{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:3rem;}
+.footer-logo{font-family:'Righteous',sans-serif;font-size:1.8rem;color:var(--orange);margin-bottom:0.8rem;}
+.footer-desc{font-size:0.88rem;color:rgba(255,255,255,0.5);line-height:1.7;max-width:280px}
+.footer-col h4{font-size:0.78rem;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:var(--yellow);margin-bottom:1rem}
+.footer-col ul{list-style:none}
+.footer-col li{margin-bottom:0.6rem}
+.footer-col a{color:rgba(255,255,255,0.6);text-decoration:none;font-size:0.88rem;font-weight:600;transition:0.2s}
+.footer-col a:hover{color:#fff}
+.footer-bottom{max-width:1400px;margin:0 auto;border-top:1px solid rgba(255,255,255,0.1);padding-top:1.5rem;display:flex;align-items:center;justify-content:space-between;font-size:0.82rem;color:rgba(255,255,255,0.4);}
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--text);color:#fff;border-radius:16px;padding:14px 24px;font-weight:800;font-size:0.9rem;z-index:10001;transform:translateY(100px);opacity:0;transition:0.3s;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1}
+@media (max-width: 1024px) {
+  .hero{grid-template-columns:1fr;text-align:center;padding:3rem 2rem;min-height:auto;}
+  .hero-desc{margin:0 auto 2rem;}
+  .hero-visual{margin-top:2rem;}
+  .hero-card-stack{margin:0 auto;transform:scale(0.9);}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:2rem;}
+}
+@media (max-width: 900px) {
+  .nav-links,.search-bar{display:none;}
+  .hamburger{display:block;}
+}
+@media (max-width: 768px) {
+  nav{padding:0 1rem;height:60px;}
+  .logo{font-size:1.4rem;}
+  .section{padding:3rem 1.5rem;}
+  .product-grid{grid-template-columns:repeat(2,1fr) !important;gap:10px;}
+  .product-card{border-radius:12px;}
+  .product-img{font-size:3.5rem;}
+  .product-body{padding:0.8rem;}
+  .product-name{font-size:0.85rem;height:2.2rem;overflow:hidden;}
+  .product-desc{display:none;}
+  .product-footer{flex-direction:column;align-items:flex-start;gap:6px;}
+  .add-to-cart{padding:8px;width:100%;font-size:0.75rem;}
+  .cat-grid{grid-template-columns:repeat(3,1fr);}
+  .cart-sidebar{width:100%;max-width:100%;right:-100%;}
+  .modal{grid-template-columns:1fr;border-radius:20px;}
+  .modal-left{display:none;}
+  .modal-right{padding:1.5rem;}
+  .footer-grid{grid-template-columns:1fr;text-align:center;gap:2rem;}
+}
+</style>
+</head>
+<body>
+<div class="mobile-menu" id="mobileMenu">
+    <a href="#" onclick="navigate('shop');toggleMenu();">🛍️ Ürünler</a>
+    <a href="#" onclick="navigate('categories');toggleMenu();">📦 Kategoriler</a>
+    <a href="#" onclick="navigate('campaigns');toggleMenu();">🎁 Kampanyalar</a>
+    <a href="#" onclick="navigate('about');toggleMenu();">ℹ️ Hakkımızda</a>
+</div>
+<div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+        <h2>🛒 Sepetim</h2>
+        <button class="cart-close" onclick="closeCart()">✕</button>
+    </div>
+    <div class="cart-body" id="cartItems">
+        <div style="text-align:center;padding:2rem;color:var(--muted);font-weight:bold;">Sepetiniz boş 🐾</div>
+    </div>
+    <div class="cart-footer">
+        <div class="cart-summary">
+            <span>Toplam:</span>
+            <span id="cartTotal">₺0</span>
+        </div>
+        <button class="checkout-btn" onclick="checkoutFromCart()">💳 Alışverişi Tamamla</button>
+    </div>
+</div>
+<nav>
+  <a href="#" onclick="navigate('home')" class="logo">🐾 <span>Shopypet</span></a>
+  <ul class="nav-links">
+    <li><a href="#" onclick="navigate('shop')" id="link-shop">Ürünler</a></li>
+    <li><a href="#" onclick="navigate('categories')" id="link-categories">Kategoriler</a></li>
+    <li><a href="#" onclick="navigate('campaigns')" id="link-campaigns">Kampanyalar</a></li>
+    <li><a href="#" onclick="navigate('about')" id="link-about">Hakkımızda</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="search-bar">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" placeholder="Ürün ara..." oninput="searchProducts(this.value)">
+    </div>
+    <button class="cart-pill" onclick="openCart()">
+      🛒 Sepet <span class="cart-count" id="cartCount">0</span>
+    </button>
+    <button class="hamburger" onclick="toggleMenu()">☰</button>
+  </div>
+</nav>
+<div id="page-home" class="page-section active">
+    <section class="hero" id="heroSection">
+      <div class="hero-blob"></div>
+      <div>
+        <div class="hero-eyebrow">🎉 Yeni Sezon Ürünleri Geldi!</div>
+        <h1 class="fade-up">Dostların İçin<br>En İyi <span class="highlight">Ürünler</span></h1>
+        <p class="hero-desc fade-up delay-1">Köpeğin, kedin veya diğer dostların için premium kalite mama, oyuncak, tasma ve aksesuar. Hızlı kargo, güvenli ödeme.</p>
+        <div class="hero-btns fade-up delay-2">
+          <a href="#" class="btn-primary" onclick="navigate('shop')">🛍️ Alışverişe Başla</a>
+          <a href="#" class="btn-outline" onclick="navigate('categories')">Kategorileri Gör</a>
+        </div>
+        <div class="hero-badges fade-up delay-3">
+          <div class="badge-pill">🚀 Aynı gün kargo</div><div class="badge-pill">✅ Güvenli ödeme</div>
+        </div>
+      </div>
+      <div class="hero-visual fade-up delay-2">
+        <div class="hero-card-stack">
+          <div class="float-card fc-top"><div class="product-thumb">🦮</div><div class="fc-name">Premium Tasma</div><div class="fc-price">₺249</div></div>
+          <div class="float-card fc-main"><div class="product-thumb" style="font-size:5rem">😺</div><div class="fc-name">Kedi Oyun Seti</div><div class="fc-price">₺399</div></div>
+          <div class="float-card fc-bottom"><div class="product-thumb">🐇</div><div class="fc-name">Tavşan Maması</div><div class="fc-price">₺189</div></div>
+        </div>
+      </div>
+    </section>
+    <div class="cat-band">
+      <div class="cat-scroll">
+        <span class="cat-item"><span class="cat-dot"></span>Köpek Maması</span><span class="cat-item"><span class="cat-dot"></span>Kedi Oyuncakları</span><span class="cat-item"><span class="cat-dot"></span>Tasmalar</span><span class="cat-item"><span class="cat-dot"></span>Yataklar</span><span class="cat-item"><span class="cat-dot"></span>Kafesler</span><span class="cat-item"><span class="cat-dot"></span>Köpek Maması</span>
+      </div>
+    </div>
+</div>
+<div id="page-shop" class="page-section">
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title" id="shopTitle">Tüm Ürünler<span class="dot">.</span></h2>
+      </div>
+      <div class="product-grid" id="mainProductGrid"></div>
+    </section>
+</div>
+<div id="page-categories" class="page-section">
+    <section class="section">
+      <div class="section-header"><h2 class="section-title">Kategoriler<span class="dot">.</span></h2></div>
+      <div class="cat-grid">
+        <a href="#" onclick="searchProducts('köpek')" class="cat-card"><div class="cat-icon-wrap" style="background:#FFF0E8">🐶</div><div class="cat-label">Köpek</div></a>
+        <a href="#" onclick="searchProducts('kedi')" class="cat-card"><div class="cat-icon-wrap" style="background:#F0F8FF">🐱</div><div class="cat-label">Kedi</div></a>
+        <a href="#" onclick="searchProducts('tavşan')" class="cat-card"><div class="cat-icon-wrap" style="background:#F5FFF0">🐇</div><div class="cat-label">Tavşan</div></a>
+        <a href="#" onclick="searchProducts('hamster')" class="cat-card"><div class="cat-icon-wrap" style="background:#FFFFF0">🐹</div><div class="cat-label">Hamster</div></a>
+        <a href="#" onclick="searchProducts('kuş')" class="cat-card"><div class="cat-icon-wrap" style="background:#F8F0FF">🦜</div><div class="cat-label">Kuş</div></a>
+      </div>
+    </section>
+</div>
+<div id="page-campaigns" class="page-section">
+    <div class="static-page">
+        <h2>🎁 Güncel Kampanyalar</h2>
+        <p>İlk Siparişine %15 İndirim! Sepette <b>SHOPYPET15</b> kodunu kullanmayı unutma.</p>
+        <p>Ayrıca 500 TL üzeri alışverişlerde kargo bizden!</p>
+        <a href="#" class="btn-primary" onclick="navigate('shop')">Şimdi Alışveriş Yap</a>
+    </div>
+</div>
+<div id="page-about" class="page-section">
+    <div class="static-page">
+        <h2>🐾 Biz Kimiz?</h2>
+        <p>Shopypet, evcil dostlarınızın ihtiyaç duyduğu premium kaliteli ürünleri en hızlı şekilde kapınıza getiren modern bir platformdur.</p>
+        <p>Türkiye'nin her yerine aynı gün kargo ve %100 iade garantisiyle hizmet veriyoruz.</p>
+    </div>
+</div>
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-logo">🐾 Shopypet</div>
+      <p class="footer-desc">Evcil hayvanlarınız için en kaliteli ürünleri sunuyoruz. Mutlu dostlar, mutlu sahipler!</p>
+    </div>
+    <div class="footer-col"><h4>Hızlı Menü</h4><ul><li><a href="#" onclick="navigate('shop')">Ürünler</a></li><li><a href="#" onclick="navigate('campaigns')">Kampanyalar</a></li></ul></div>
+  </div>
+</footer>
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal">
+    <div class="modal-left" id="modalEmoji"></div>
+    <div class="modal-right">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div id="modalCategory" style="color:var(--orange);font-weight:800;font-size:0.8rem;margin-bottom:5px;"></div>
+      <h2 id="modalTitle" class="modal-title">Başlık</h2>
+      <p id="modalDesc" style="color:var(--muted);margin-bottom:1rem;"></p>
+      <div id="modalPrice" class="modal-price">₺0</div>
+      <div id="productOptionsWrap">
+          <button class="modal-buy-btn" id="buyBtn">🛒 Sepete Ekle</button>
+      </div>
+      <div class="payment-wrap" id="paymentWrap">
+        <div id="iyzipay-checkout-form"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const products=[
+  {id:0,emoji:'🦮',animal:'Köpek',title:'Reflektörlü Güvenlik Tasması',price:249,desc:'Gece yürüyüşleri için güvenli, reflektörlü tasma.'},
+  {id:1,emoji:'🎣',animal:'Kedi',title:'İnteraktif Balık Oyuncağı',price:199,desc:'USB şarjlı otomatik hareket eden oyuncak.'},
+  {id:2,emoji:'🛏️',animal:'Köpek',title:'Memory Foam Köpek Yatağı',price:419,desc:'Ortopedik destekli lüks ve rahat yatak.'},
+  {id:3,emoji:'🌿',animal:'Tavşan',title:'Organik Saman & Ot',price:129,desc:'%100 doğal, katkısız sindirim dostu saman.'},
+  {id:4,emoji:'🏠',animal:'Kedi',title:'Kedi Evi & Tırmalama',price:849,desc:'Doğal sisal ipli ve peluş yüzeyli kule.'},
+  {id:5,emoji:'🪺',animal:'Kuş',title:'Ahşap Kuş Kafesi Premium',price:399,desc:'Doğal ahşap ve paslanmaz çelik telli kafes.'},
+  {id:6,emoji:'🎡',animal:'Hamster',title:'Sessiz Koşu Çarkı',price:89,desc:'Gece gürültü yapmayan özel rulmanlı çark.'},
+  {id:7,emoji:'🍖',animal:'Köpek',title:'Doğal Kemik Ödül Bisküvisi',price:149,desc:'Tahılsız, vitamin deposu lezzetli ödül.'}
+];
+function navigate(pageId){
+    document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('page-'+pageId).classList.add('active');
+    document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+    if(document.getElementById('link-'+pageId))document.getElementById('link-'+pageId).classList.add('active');
+    if(pageId==='shop')renderProducts(products,"Tüm Ürünler");
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+function renderProducts(list,titleText="Tüm Ürünler"){
+    document.getElementById('shopTitle').innerHTML=titleText+'<span class="dot">.</span>';
+    const grid=document.getElementById('mainProductGrid');
+    if(list.length===0){
+        grid.innerHTML='<p style="color:var(--muted);grid-column:1/-1;font-size:1.2rem;">Aradığınız ürün bulunamadı 🐾</p>';
+        return;
+    }
+    grid.innerHTML=list.map(p=>`
+        <div class="product-card" onclick="openModal(${p.id})">
+            <div class="product-img">${p.emoji}</div>
+            <div class="product-body">
+                <div class="product-animal">${p.animal}</div>
+                <div class="product-name">${p.title}</div>
+                <div class="product-desc">${p.desc}</div>
+                <div class="product-footer">
+                    <div class="product-price">₺${p.price}</div>
+                    <button class="add-to-cart" onclick="event.stopPropagation();addToCart(${p.id})">+ Sepet</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+function searchProducts(query){
+    navigate('shop');
+    const term=query.toLowerCase();
+    const filtered=products.filter(p=>p.title.toLowerCase().includes(term)||p.animal.toLowerCase().includes(term));
+    renderProducts(filtered,query?`"${query}" Sonuçları`:"Tüm Ürünler");
+}
+let cartItems=[];
+function addToCart(id){
+    const p=products.find(x=>x.id===id);
+    const exist=cartItems.find(x=>x.id===id);
+    if(exist)exist.qty++;else cartItems.push({...p,qty:1});
+    updateCart();
+    showToast(`🛒 ${p.title} sepete eklendi!`);
+}
+function updateCartQty(id,delta){
+    const item=cartItems.find(x=>x.id===id);
+    if(item){item.qty+=delta;if(item.qty<=0)cartItems=cartItems.filter(x=>x.id!==id);}
+    updateCart();
+}
+function updateCart(){
+    const container=document.getElementById('cartItems');
+    let total=0,count=0;
+    if(cartItems.length===0){
+        container.innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);font-weight:bold;">Sepetiniz boş 🐾</div>';
+    }else{
+        container.innerHTML=cartItems.map(item=>{
+            total+=item.price*item.qty;count+=item.qty;
+            return `
+            <div class="cart-item">
+                <div class="cart-item-img">${item.emoji}</div>
+                <div class="cart-item-info">
+                    <div class="cart-item-title">${item.title}</div>
+                    <div class="cart-item-price">₺${item.price}</div>
+                    <div class="cart-item-ctrl">
+                        <button class="cart-item-btn" onclick="updateCartQty(${item.id},-1)">-</button>
+                        <span>${item.qty}</span>
+                        <button class="cart-item-btn" onclick="updateCartQty(${item.id},1)">+</button>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+    document.getElementById('cartCount').textContent=count;
+    document.getElementById('cartTotal').textContent='₺'+total;
+}
+function openCart(){document.getElementById('cartSidebar').classList.add('open');}
+function closeCart(){document.getElementById('cartSidebar').classList.remove('open');}
+function openModal(id){
+    const p=products.find(x=>x.id===id);
+    document.getElementById('productOptionsWrap').style.display='block';
+    document.getElementById('paymentWrap').classList.remove('open');
+    document.getElementById('iyzipay-checkout-form').innerHTML='';
+    document.getElementById('modalEmoji').textContent=p.emoji;
+    document.getElementById('modalCategory').textContent=p.animal.toUpperCase();
+    document.getElementById('modalTitle').textContent=p.title;
+    document.getElementById('modalDesc').textContent=p.desc;
+    document.getElementById('modalPrice').textContent='₺'+p.price;
+    const btn=document.getElementById('buyBtn');
+    btn.style.display='block';
+    btn.disabled=false;
+    btn.innerHTML='🛒 Sepete Ekle';
+    btn.onclick=()=>{addToCart(id);closeModal();openCart();};
+    document.body.classList.add('modal-open');
+    document.getElementById('modalOverlay').classList.add('open');
+}
+async function checkoutFromCart(){
+    if(cartItems.length===0)return alert("Sepetiniz boş!");
+    closeCart();
+    let finalTotal=0;
+    cartItems.forEach(item=>finalTotal+=(item.price*item.qty));
+    document.getElementById('productOptionsWrap').style.display='none';
+    document.getElementById('modalEmoji').textContent='💳';
+    document.getElementById('modalCategory').textContent='GÜVENLİ ÖDEME';
+    document.getElementById('modalTitle').textContent='Siparişi Tamamla';
+    document.getElementById('modalDesc').textContent='Ödemenizi İyzipay güvencesiyle tamamlayın.';
+    document.getElementById('modalPrice').textContent=document.getElementById('cartTotal').textContent;
+    document.getElementById('buyBtn').style.display='none';
+    document.body.classList.add('modal-open');
+    document.getElementById('modalOverlay').classList.add('open');
+    const formWrap=document.getElementById('paymentWrap');
+    const formCont=document.getElementById('iyzipay-checkout-form');
+    formWrap.classList.add('open');
+    formCont.innerHTML='<p style="text-align:center;padding:1rem;font-weight:bold;">⏳ Yükleniyor...</p>';
+    try{
+        const res=await fetch('http://127.0.0.1:5000/odeme-formu-al',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({price:finalTotal})
+        });
+        const data=await res.json();
+        if(data.status==='success'){
+            formCont.innerHTML=data.checkoutFormContent;
+            formCont.querySelectorAll('script').forEach(old=>{
+                const s=document.createElement('script');
+                if(old.src)s.src=old.src;else s.textContent=old.textContent;
+                document.head.appendChild(s);
+            });
+        }else{formCont.innerHTML='<p style="color:red">Hata: Form alınamadı.</p>';}
+    }catch(e){formCont.innerHTML='<p style="color:red">Sunucu Hatası!</p>';}
+}
+function closeModal(){
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.body.classList.remove('modal-open');
+}
+function toggleMenu(){document.getElementById('mobileMenu').classList.toggle('open');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+renderProducts(products);
+</script>
+</body>
+</html>
